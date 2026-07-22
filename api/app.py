@@ -1,12 +1,15 @@
+import itertools
 import logging
 import os
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+REQUIRED_FIELDS = ["paciente", "cpf", "medico", "especialidade", "data", "horario", "convenio", "status"]
 
 AGENDAMENTOS = [
     {
@@ -91,11 +94,54 @@ AGENDAMENTOS = [
     },
 ]
 
+_id_counter = itertools.count(1)
+for _agendamento in AGENDAMENTOS:
+    _agendamento["id"] = next(_id_counter)
 
-@app.route("/agendamentos")
+
+@app.route("/agendamentos", methods=["GET"])
 def agendamentos():
     logger.info("Retornando %d agendamentos", len(AGENDAMENTOS))
     return jsonify(AGENDAMENTOS)
+
+
+@app.route("/agendamentos", methods=["POST"])
+def criar_agendamento():
+    data = request.get_json(silent=True) or {}
+
+    missing = [field for field in REQUIRED_FIELDS if not str(data.get(field, "")).strip()]
+    if missing:
+        return jsonify({"error": f"Campos obrigatórios ausentes: {', '.join(missing)}"}), 400
+
+    novo_agendamento = {field: data[field] for field in REQUIRED_FIELDS}
+    novo_agendamento["id"] = next(_id_counter)
+    AGENDAMENTOS.append(novo_agendamento)
+
+    logger.info("Agendamento criado: id=%s", novo_agendamento["id"])
+    return jsonify(novo_agendamento), 201
+
+
+@app.route("/agendamentos", methods=["DELETE"])
+def excluir_agendamentos():
+    global AGENDAMENTOS
+
+    data = request.get_json(silent=True) or {}
+    ids = data.get("ids")
+
+    if not isinstance(ids, list) or not ids:
+        return jsonify({"error": "Informe uma lista de ids para exclusão."}), 400
+
+    try:
+        ids_set = {int(item) for item in ids}
+    except (TypeError, ValueError):
+        return jsonify({"error": "A lista de ids deve conter apenas números."}), 400
+
+    tamanho_antes = len(AGENDAMENTOS)
+    AGENDAMENTOS = [a for a in AGENDAMENTOS if a["id"] not in ids_set]
+    removidos = tamanho_antes - len(AGENDAMENTOS)
+
+    logger.info("Removidos %d agendamentos", removidos)
+    return jsonify({"removed": removidos}), 200
 
 
 if __name__ == "__main__":

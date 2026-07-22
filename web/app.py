@@ -129,5 +129,55 @@ def api_agendamentos():
     return jsonify(valid_records)
 
 
+@app.route("/api/agendamentos", methods=["POST"])
+@login_required
+def api_criar_agendamento():
+    data = request.get_json(silent=True) or {}
+
+    missing = [field for field in REQUIRED_FIELDS if not str(data.get(field, "")).strip()]
+    if missing:
+        return jsonify({"error": f"Campos obrigatórios ausentes: {', '.join(missing)}"}), 400
+
+    try:
+        response = requests.post(f"{API_URL}/agendamentos", json=data, timeout=5)
+        response.raise_for_status()
+    except requests.exceptions.RequestException:
+        logger.exception("Falha ao criar agendamento no serviço de agendamentos")
+        return jsonify({"error": "Serviço de agendamentos indisponível no momento. Tente novamente mais tarde."}), 503
+
+    try:
+        criado = response.json()
+    except ValueError:
+        logger.exception("Resposta inválida (não é JSON) do serviço de agendamentos")
+        return jsonify({"error": "Resposta inválida do serviço de agendamentos."}), 502
+
+    return jsonify(criado), 201
+
+
+@app.route("/api/agendamentos", methods=["DELETE"])
+@login_required
+def api_excluir_agendamentos():
+    data = request.get_json(silent=True) or {}
+    ids = data.get("ids")
+
+    if not isinstance(ids, list) or not ids:
+        return jsonify({"error": "Informe ao menos um agendamento para exclusão."}), 400
+
+    try:
+        response = requests.delete(f"{API_URL}/agendamentos", json={"ids": ids}, timeout=5)
+        response.raise_for_status()
+    except requests.exceptions.RequestException:
+        logger.exception("Falha ao excluir agendamentos no serviço de agendamentos")
+        return jsonify({"error": "Serviço de agendamentos indisponível no momento. Tente novamente mais tarde."}), 503
+
+    try:
+        resultado = response.json()
+    except ValueError:
+        logger.exception("Resposta inválida (não é JSON) do serviço de agendamentos")
+        return jsonify({"error": "Resposta inválida do serviço de agendamentos."}), 502
+
+    return jsonify(resultado), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

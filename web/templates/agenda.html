@@ -24,10 +24,66 @@
       <button id="clear-btn">Limpar</button>
     </div>
 
+    <div class="toolbar">
+      <button id="delete-btn" class="icon-btn danger" title="Excluir selecionados" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/>
+        </svg>
+        Excluir
+      </button>
+      <button id="add-btn" class="icon-btn primary" title="Novo agendamento">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Novo agendamento
+      </button>
+    </div>
+
     <p id="feedback" class="feedback"></p>
 
     <div id="agenda-table"></div>
   </main>
+
+  <dialog id="agendamento-modal">
+    <form id="agendamento-form">
+      <h2>Novo agendamento</h2>
+
+      <label for="f-paciente">Paciente</label>
+      <input type="text" id="f-paciente" name="paciente" required>
+
+      <label for="f-cpf">CPF</label>
+      <input type="text" id="f-cpf" name="cpf" required>
+
+      <label for="f-medico">Médico</label>
+      <input type="text" id="f-medico" name="medico" required>
+
+      <label for="f-especialidade">Especialidade</label>
+      <input type="text" id="f-especialidade" name="especialidade" required>
+
+      <label for="f-data">Data</label>
+      <input type="date" id="f-data" name="data" required>
+
+      <label for="f-horario">Horário</label>
+      <input type="time" id="f-horario" name="horario" required>
+
+      <label for="f-convenio">Convênio</label>
+      <input type="text" id="f-convenio" name="convenio" required>
+
+      <label for="f-status">Status</label>
+      <select id="f-status" name="status" required>
+        <option value="Confirmado">Confirmado</option>
+        <option value="Aguardando">Aguardando</option>
+        <option value="Cancelado">Cancelado</option>
+      </select>
+
+      <p id="modal-feedback" class="feedback"></p>
+
+      <div class="modal-actions">
+        <button type="button" id="modal-cancel-btn">Cancelar</button>
+        <button type="submit" id="modal-save-btn">Salvar</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
