@@ -179,5 +179,10 @@ def api_excluir_agendamentos():
     return jsonify(resultado), 200
 
 
+@app.errorhandler(404)
+def pagina_nao_encontrada(error):
+    return render_template("404.html"), 404
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
