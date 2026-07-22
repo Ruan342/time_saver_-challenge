@@ -54,7 +54,25 @@ Esses valores vêm das variáveis de ambiente `TEST_USER_EMAIL` e `TEST_USER_PAS
 4. Digite um nome de paciente, CPF ou nome de médico no campo de busca (por exemplo, `Maria` ou `Cardiologia` não filtram por especialidade, apenas paciente/CPF/médico) e clique em "Buscar".
 5. Se não houver nenhum agendamento correspondente, a tabela exibe a mensagem "Nenhum agendamento encontrado".
 6. Clique em "Limpar" para voltar à lista completa.
-7. Clique em "Sair" para encerrar a sessão e retornar à tela de login.
+7. Selecione um ou mais agendamentos pelo checkbox na primeira coluna da tabela e clique no botão de lixeira para excluí-los (uma confirmação é exibida antes da exclusão).
+8. Clique em "Novo agendamento" (botão "+") para abrir um formulário em pop-up e cadastrar um novo agendamento.
+9. Clique em "Sair" para encerrar a sessão e retornar à tela de login.
+10. Ao acessar uma URL inexistente, uma página 404 personalizada é exibida, com um botão para voltar à tela inicial.
+
+## Gerenciamento de agendamentos (criar e excluir)
+
+Além da consulta, a agenda permite:
+
+- **Selecionar e excluir**: cada linha da tabela tem um checkbox; ao selecionar uma ou mais linhas, o botão de lixeira é habilitado. Clicar nele exclui os agendamentos selecionados (após confirmação).
+- **Cadastrar**: o botão "+ Novo agendamento" abre um formulário em pop-up (`<dialog>`) com os campos obrigatórios (paciente, CPF, médico, especialidade, data, horário, convênio e status). Ao salvar, o agendamento é criado e a tabela é recarregada.
+
+Essas operações passam pelas rotas `POST /api/agendamentos` e `DELETE /api/agendamentos` do serviço `web`, que fazem proxy para o serviço `api` (`POST`/`DELETE /agendamentos`), validando os campos obrigatórios antes de repassar a chamada.
+
+**Importante:** os agendamentos continuam guardados em uma lista Python em memória no serviço `api` (mesma abordagem dos dados mockados originais), e não em um banco de dados. Isso significa que agendamentos criados ou excluídos pela tela são perdidos se o serviço `api` reiniciar. Só a tabela `users` (login) é persistida em SQLite.
+
+## Página 404 personalizada
+
+Qualquer URL não mapeada pelo Flask exibe uma página de erro 404 customizada (`web/templates/404.html`), com uma mensagem amigável e um botão para voltar à tela inicial, em vez da página de erro padrão do Flask.
 
 ## Rodando os testes automatizados
 
@@ -89,3 +107,5 @@ Todos esses cenários são registrados via `logging` no console da aplicação (
 - **Servidor de desenvolvimento do Flask**: por simplicidade, os dois serviços rodam com o servidor embutido do Flask (`app.run`). Em um cenário de produção real, o recomendado seria usar um servidor WSGI como Gunicorn.
 - **Sem cadastro de novos usuários**: o escopo do desafio é login e consulta da agenda, então não há tela de cadastro; o usuário de teste é criado automaticamente por um script de seed (`web/seed.py`).
 - **Busca simples**: a busca filtra por correspondência parcial (case-insensitive) nos campos paciente, CPF e médico, feita no lado do servidor após buscar os dados da API.
+- **Criação/exclusão de agendamentos em memória**: assim como os dados mockados originais, os agendamentos criados ou excluídos pela tela não são persistidos em banco — ficam em uma lista Python no serviço `api`. Optei por manter a mesma simplicidade do restante do projeto; para persistir entre reinicializações, o próximo passo seria criar uma tabela `agendamentos` no SQLite já usado para `users`.
+- **Página 404 customizada**: registrada via `@app.errorhandler(404)` no serviço `web`, cobre automaticamente qualquer URL não mapeada, sem precisar de uma rota "catch-all" manual.
