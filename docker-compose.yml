@@ -1,0 +1,23 @@
+services:
+  api:
+    build: ./api
+    ports:
+      - "5001:5001"
+
+  web:
+    build: ./web
+    ports:
+      - "5000:5000"
+    environment:
+      - API_URL=http://api:5001
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+      - DATABASE_PATH=/data/agenda.db
+      - TEST_USER_EMAIL=${TEST_USER_EMAIL:-teste@timesaver.com}
+      - TEST_USER_PASSWORD=${TEST_USER_PASSWORD:-teste123}
+    volumes:
+      - agenda_data:/data
+    depends_on:
+      - api
+
+volumes:
+  agenda_data:
